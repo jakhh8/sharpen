@@ -2,7 +2,10 @@ use std::ffi::c_void;
 
 use netcorehost::hostfxr::ManagedFunction;
 
-use crate::{Bool32, ManagedHandle, TypeId, managed_type::ManagedType, string::CSharpNativeString};
+use crate::{
+    Bool32, ManagedHandle, TypeAccessibility, TypeId, managed_type::ManagedType,
+    string::CSharpNativeString,
+};
 
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -39,13 +42,13 @@ pub type GetTypeFieldsFn = extern "system" fn(TypeId, *mut ManagedHandle, *mut i
 pub type GetTypePropertiesFn = extern "system" fn(TypeId, *mut ManagedHandle, *mut i32);
 pub type HasTypeAttributeFn = extern "system" fn(TypeId, TypeId) -> Bool32;
 pub type GetTypeAttributesFn = extern "system" fn(ManagedHandle, *mut TypeId, *mut i32);
-//pub type GetTypeManagedTypeFn = extern "system" fn(TypeId) -> ManagedType;
+pub type GetTypeManagedTypeFn = extern "system" fn(TypeId) -> ManagedType;
 
-/* pub type GetMethodInfoNameFn =fn(ManagedHandle) -> CSharpNativeString;
-pub type GetMethodInfoReturnTypeFn =fn(ManagedHandle, *mut TypeId);
-pub type GetMethodInfoParameterTypesFn =fn(ManagedHandle, *mut TypeId, *mut i32);
-pub type GetMethodInfoAccessibilityFn =fn(ManagedHandle) -> TypeAccessibility;
-pub type GetMethodInfoAttributesFn =fn(ManagedHandle, *mut TypeId, *mut i32);
+pub type GetMethodInfoNameFn = extern "system" fn(ManagedHandle) -> CSharpNativeString;
+pub type GetMethodInfoReturnTypeFn = extern "system" fn(ManagedHandle, *mut TypeId);
+pub type GetMethodInfoParameterTypesFn = extern "system" fn(ManagedHandle, *mut TypeId, *mut i32);
+pub type GetMethodInfoAccessibilityFn = extern "system" fn(ManagedHandle) -> TypeAccessibility;
+pub type GetMethodInfoAttributesFn = extern "system" fn(ManagedHandle, *mut TypeId, *mut i32);
 
 pub type GetFieldInfoNameFn = extern "system" fn(ManagedHandle) -> CSharpNativeString;
 pub type GetFieldInfoTypeFn = extern "system" fn(ManagedHandle, *mut TypeId);
@@ -56,10 +59,12 @@ pub type GetPropertyInfoNameFn = extern "system" fn(ManagedHandle) -> CSharpNati
 pub type GetPropertyInfoTypeFn = extern "system" fn(ManagedHandle, *mut TypeId);
 pub type GetPropertyInfoAttributesFn = extern "system" fn(ManagedHandle, *mut TypeId, *mut i32);
 
-pub type GetAttributeFieldValueFn = extern "system" fn(ManagedHandle, CSharpNativeString, *mut c_void);
+pub type GetAttributeFieldValueFn =
+    extern "system" fn(ManagedHandle, CSharpNativeString, *mut c_void);
 pub type GetAttributeTypeFn = extern "system" fn(ManagedHandle, *mut TypeId);
 
-pub type CreateObjectFn = extern "system" fn(TypeId, Bool32, *const *mut c_void, *const ManagedType, i32);*/
+pub type CreateObjectFn =
+    extern "system" fn(TypeId, Bool32, *const *mut c_void, *const ManagedType, i32) -> *mut c_void;
 pub type InvokeMethodFn = extern "system" fn(
     *mut c_void,
     CSharpNativeString,
@@ -85,14 +90,15 @@ pub type InvokeStaticMethodRetFn = extern "system" fn(
     i32,
     *mut c_void,
 );
-/*pub type SetFieldValueFn = extern "system" fn(*mut c_void, CSharpNativeString, *mut c_void);
+
+pub type SetFieldValueFn = extern "system" fn(*mut c_void, CSharpNativeString, *mut c_void);
 pub type GetFieldValueFn = extern "system" fn(*mut c_void, CSharpNativeString, *mut c_void);
 pub type SetPropertyValueFn = extern "system" fn(*mut c_void, CSharpNativeString, *mut c_void);
 pub type GetPropertyValueFn = extern "system" fn(*mut c_void, CSharpNativeString, *mut c_void);
 pub type DestroyObjectFn = extern "system" fn(*mut c_void);
 pub type GetObjectTypeIdFn = extern "system" fn(*mut c_void, *mut i32);
 
-pub type CollectGarbageFn = extern "system" fn(i32, GCCollectionMode, Bool32, Bool32);
+/* pub type CollectGarbageFn = extern "system" fn(i32, GCCollectionMode, Bool32, Bool32);
 pub type WaitForPendingFinalizersFn = extern "system" fn(); */
 
 pub struct CoralManagedFunctions {
@@ -118,9 +124,9 @@ pub struct CoralManagedFunctions {
     pub get_type_properties: ManagedFunction<GetTypePropertiesFn>,
     pub has_type_attribute: ManagedFunction<HasTypeAttributeFn>,
     pub get_type_attributes: ManagedFunction<GetTypeAttributesFn>,
-    //pub get_type_managed_type: ManagedFunction<GetTypeManagedTypeFn>,
+    pub get_type_managed_type: ManagedFunction<GetTypeManagedTypeFn>,
 
-    /* pub get_method_info_name: ManagedFunction<GetMethodInfoNameFn>,
+    pub get_method_info_name: ManagedFunction<GetMethodInfoNameFn>,
     pub get_method_info_return_type: ManagedFunction<GetMethodInfoReturnTypeFn>,
     pub get_method_info_parameter_types: ManagedFunction<GetMethodInfoParameterTypesFn>,
     pub get_method_info_accessibility: ManagedFunction<GetMethodInfoAccessibilityFn>,
@@ -138,19 +144,19 @@ pub struct CoralManagedFunctions {
     pub get_attribute_field_value: ManagedFunction<GetAttributeFieldValueFn>,
     pub get_attribute_type: ManagedFunction<GetAttributeTypeFn>,
 
-    pub create_object: ManagedFunction<CreateObjectFn>,*/
+    pub create_object: ManagedFunction<CreateObjectFn>,
     pub create_assembly_load_context: ManagedFunction<CreateAssemblyLoadContextFn>,
     pub invoke_method: ManagedFunction<InvokeMethodFn>,
     pub invoke_method_ret: ManagedFunction<InvokeMethodRetFn>,
     pub invoke_static_method: ManagedFunction<InvokeStaticMethodFn>,
     pub invoke_static_method_ret: ManagedFunction<InvokeStaticMethodRetFn>,
-    /*pub set_field_value: ManagedFunction<SetFieldValueFn>,
+
+    pub set_field_value: ManagedFunction<SetFieldValueFn>,
     pub get_field_value: ManagedFunction<GetFieldValueFn>,
     pub set_property_value: ManagedFunction<SetPropertyValueFn>,
     pub get_property_value: ManagedFunction<GetPropertyValueFn>,
     pub destroy_object: ManagedFunction<DestroyObjectFn>,
     pub get_object_type_id: ManagedFunction<GetObjectTypeIdFn>,
-
-    pub collect_garbage: ManagedFunction<CollectGarbageFn>,
+    /* pub collect_garbage: ManagedFunction<CollectGarbageFn>,
     pub wait_for_pending_finalizers: ManagedFunction<WaitForPendingFinalizersFn>, */
 }

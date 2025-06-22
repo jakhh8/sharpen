@@ -1,7 +1,8 @@
 use crate::string::CSharpNativeString;
 
 pub type MessageCallbackFn = fn(String, MessageLevel);
-pub(crate) type MessageCallbackFnInternal = fn(CSharpNativeString, MessageLevel);
+pub(crate) type MessageCallbackFnInternal =
+    unsafe extern "system" fn(CSharpNativeString, MessageLevel);
 
 // TODO: Is this the correct size?
 #[repr(C)]
@@ -27,44 +28,3 @@ impl std::fmt::Display for MessageLevel {
         }
     }
 }
-
-pub struct MessageLevelFilter {
-    filter: u8,
-}
-
-/* impl MessageLevelFilter {
-    const INFO: Self = Self { filter: 1 << 0 };
-    const WARNING: Self = Self { filter: 1 << 1 };
-    const ERROR: Self = Self { filter: 1 << 2 };
-    const ALL: Self = Self::INFO | Self::WARNING | Self::ERROR;
-
-    pub fn new() -> Self {
-        Self { filter: 0 }
-    }
-
-    pub fn allow(self, level: u8) -> Self {
-        Self {
-            filter: self.filter | level,
-        }
-    }
-}
-
-impl BitAnd for MessageLevelFilter {
-    type Output = Self;
-
-    fn bitand(self, rhs: Self) -> Self::Output {
-        Self {
-            filter: self.filter & rhs.filter,
-        }
-    }
-}
-
-impl BitOr for MessageLevelFilter {
-    type Output = Self;
-
-    fn bitor(self, rhs: Self) -> Self::Output {
-        Self {
-            filter: self.filter | rhs.filter,
-        }
-    }
-} */

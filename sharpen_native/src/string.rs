@@ -16,7 +16,7 @@ impl CSharpNativeString {
     pub fn new(str: &str) -> Self {
         let mut res = Self {
             string: std::ptr::null(),
-            _is_disposed: 0,
+            _is_disposed: Bool32(0),
         };
 
         res.assign(str);

@@ -26,7 +26,7 @@ pub enum CoralManagedInitError {
 }
 
 pub type ExceptionCallbackFn = fn(String);
-pub(crate) type ExceptionCallbackFnInternal = fn(CSharpNativeString);
+pub(crate) type ExceptionCallbackFnInternal = unsafe extern "system" fn(CSharpNativeString);
 
 #[derive(Clone)]
 pub struct HostSettings {
@@ -162,10 +162,8 @@ impl HostInstance {
             pdcstring::PdCString::from_os_str(coral_managed_assembly_path.as_os_str())
                 .expect("wtf!");
 
-        type InitializeFn = extern "system" fn(
-            extern "system" fn(CSharpNativeString, MessageLevel),
-            extern "system" fn(CSharpNativeString),
-        );
+        type InitializeFn =
+            extern "system" fn(MessageCallbackFnInternal, ExceptionCallbackFnInternal);
         let coral_managed_entrypoint = delegate_loader
             .load_assembly_and_get_function_with_unmanaged_callers_only::<InitializeFn>(
                 &coral_managed_assembly_path_pdcstr,
@@ -327,12 +325,12 @@ impl HostInstance {
                 pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
                 pdcstr!("GetTypeAttributes"),
             )?;
-        /* let get_type_managed_type = delegate_loader
-        .load_assembly_and_get_function_with_unmanaged_callers_only::<GetTypeManagedTypeFn>(
-            assembly_path,
-            pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
-            pdcstr!("GetTypeManagedType"),
-        )?; */
+        let get_type_managed_type = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetTypeManagedTypeFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetTypeManagedType"),
+            )?;
 
         let invoke_method = delegate_loader
             .load_assembly_and_get_function_with_unmanaged_callers_only::<InvokeMethodFn>(
@@ -357,6 +355,139 @@ impl HostInstance {
                 assembly_path,
                 pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
                 pdcstr!("InvokeStaticMethodRet"),
+            )?;
+
+        let get_method_info_name = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetMethodInfoNameFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetMethodInfoName"),
+            )?;
+        let get_method_info_return_type = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetMethodInfoReturnTypeFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetMethodInfoReturnType"),
+            )?;
+        let get_method_info_parameter_types = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetMethodInfoParameterTypesFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetMethodInfoParameterTypes"),
+            )?;
+        let get_method_info_accessibility = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetMethodInfoAccessibilityFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetMethodInfoAccessibility"),
+            )?;
+        let get_method_info_attributes = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetMethodInfoAttributesFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetMethodInfoAttributes"),
+            )?;
+
+        let get_field_info_name = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetFieldInfoNameFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetFieldInfoName"),
+            )?;
+        let get_field_info_type = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetFieldInfoTypeFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetFieldInfoType"),
+            )?;
+        let get_field_info_accessibility = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetFieldInfoAccessibilityFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetFieldInfoAccessibility"),
+            )?;
+        let get_field_info_attributes = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetFieldInfoAttributesFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetFieldInfoAttributes"),
+            )?;
+
+        let get_property_info_name = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetPropertyInfoNameFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetPropertyInfoName"),
+            )?;
+        let get_property_info_type = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetPropertyInfoTypeFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetPropertyInfoType"),
+            )?;
+        let get_property_info_attributes = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetPropertyInfoAttributesFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetPropertyInfoAttributes"),
+            )?;
+
+        let get_attribute_field_value = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetAttributeFieldValueFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetAttributeFieldValue"),
+            )?;
+        let get_attribute_type = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetAttributeTypeFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.TypeInterface, Coral.Managed"),
+                pdcstr!("GetAttributeType"),
+            )?;
+
+        let create_object = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<CreateObjectFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("CreateObject"),
+            )?;
+
+        let destroy_object = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<DestroyObjectFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("DestroyObject"),
+            )?;
+        let get_object_type_id = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetObjectTypeIdFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("GetObjectTypeId"),
+            )?;
+
+        let set_field_value = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<SetFieldValueFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("SetFieldValue"),
+            )?;
+        let get_field_value = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetFieldValueFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("GetFieldValue"),
+            )?;
+        let set_property_value = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<SetPropertyValueFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("SetPropertyValue"),
+            )?;
+        let get_property_value = delegate_loader
+            .load_assembly_and_get_function_with_unmanaged_callers_only::<GetPropertyValueFn>(
+                assembly_path,
+                pdcstr!("Coral.Managed.ManagedObject, Coral.Managed"),
+                pdcstr!("GetPropertyValue"),
             )?;
 
         Ok(CoralManagedFunctions {
@@ -385,11 +516,40 @@ impl HostInstance {
             get_type_properties,
             has_type_attribute,
             get_type_attributes,
-            //get_type_managed_type,
+            get_type_managed_type,
+
             invoke_method,
             invoke_method_ret,
             invoke_static_method,
             invoke_static_method_ret,
+
+            get_method_info_name,
+            get_method_info_return_type,
+            get_method_info_parameter_types,
+            get_method_info_accessibility,
+            get_method_info_attributes,
+
+            get_field_info_name,
+            get_field_info_type,
+            get_field_info_accessibility,
+            get_field_info_attributes,
+
+            get_property_info_name,
+            get_property_info_type,
+            get_property_info_attributes,
+
+            get_attribute_field_value,
+            get_attribute_type,
+
+            create_object,
+
+            destroy_object,
+            get_object_type_id,
+
+            set_field_value,
+            get_field_value,
+            set_property_value,
+            get_property_value,
         })
     }
 }
