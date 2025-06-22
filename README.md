@@ -8,7 +8,13 @@ Currently the entire C# part of the library is just copy/paste from Coral, and t
 
 I do plan to change that.
 
+## Build instructions
+For Coral.Managed: `dotnet publish Coral.Managed -o Coral.Managed.Output`
+For Example.Managed: `dotnet build Example.Managed`
+For example: `cargo r`
+
 ## Future
  - [ ] Use proper rust error handling where possible instead of just logging the errors from C#
  - [ ] Write Sharpen.Managed to replace Coral.Managed.
  - [ ] Make sharpen_native more rust-like/less C++-like
+ - [ ] Make cargo build Coral.Managed/Sharpen.Managed?
