@@ -1,0 +1,7 @@
+/target
+/.vscode
+/.vs
+*/bin
+*/obj
+/Coral.Managed.Output/*
+!/Coral.Managed.Output/Coral.Managed.runtimeconfig.json

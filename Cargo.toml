@@ -1,0 +1,5 @@
+[workspace]
+resolver = "2"
+
+members = ["sharpen_native", "example"]
+default-members = ["example"]
