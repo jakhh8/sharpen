@@ -5,5 +5,11 @@
     <Nullable>enable</Nullable>
 	<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  
+  <ItemGroup>
+    <Reference Include="Sharpen.Managed">
+      <HintPath>..\Sharpen.Managed.Output\Sharpen.Managed.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

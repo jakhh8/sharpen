@@ -1,9 +1,3 @@
-use crate::string::CSharpNativeString;
-
-pub type MessageCallbackFn = fn(String, MessageLevel);
-pub(crate) type MessageCallbackFnInternal =
-    unsafe extern "system" fn(CSharpNativeString, MessageLevel);
-
 // TODO: Is this the correct size?
 #[repr(C)]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

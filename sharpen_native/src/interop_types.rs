@@ -4,7 +4,7 @@ use crate::Bool32;
 
 #[repr(C)]
 #[derive(Clone)]
-pub struct CSharpNativeString {
+pub struct NativeString {
     // TODO: Remove pub(crate)
     pub(crate) string: *const PdChar,
     /// NOTE: Unused, purely for C#
@@ -12,7 +12,7 @@ pub struct CSharpNativeString {
     pub(crate) _is_disposed: Bool32,
 }
 
-impl CSharpNativeString {
+impl NativeString {
     pub fn new(str: &str) -> Self {
         let mut res = Self {
             string: std::ptr::null(),
@@ -46,7 +46,7 @@ impl CSharpNativeString {
     }
 }
 
-impl CSharpNativeString {
+impl NativeString {
     fn alloc(string: widestring::WideCString) -> *const PdChar {
         unsafe {
             let ptr = std::alloc::alloc_zeroed(
@@ -79,7 +79,7 @@ impl CSharpNativeString {
     }
 }
 
-impl PartialEq for CSharpNativeString {
+impl PartialEq for NativeString {
     fn eq(&self, other: &Self) -> bool {
         if self.string == other.string {
             return true;
@@ -95,38 +95,32 @@ impl PartialEq for CSharpNativeString {
         }
     }
 }
-impl Eq for CSharpNativeString {}
+impl Eq for NativeString {}
 
 #[repr(C)]
-pub struct ScopedCSharpNativeString {
-    string: CSharpNativeString,
+#[derive(PartialEq, Eq)]
+pub struct ScopedNativeString {
+    string: NativeString,
 }
 
-impl ScopedCSharpNativeString {
-    pub fn new(string: CSharpNativeString) -> Self {
+impl ScopedNativeString {
+    pub fn new(string: NativeString) -> Self {
         Self { string }
     }
 
     pub fn from_str(str: &str) -> Self {
         Self {
-            string: CSharpNativeString::new(str),
+            string: NativeString::new(str),
         }
     }
 
-    pub fn inner(&self) -> CSharpNativeString {
+    pub fn inner(&self) -> NativeString {
         self.string.clone()
     }
 }
 
-impl Drop for ScopedCSharpNativeString {
+impl Drop for ScopedNativeString {
     fn drop(&mut self) {
-        CSharpNativeString::free(&mut self.string);
+        NativeString::free(&mut self.string);
     }
 }
-
-impl PartialEq for ScopedCSharpNativeString {
-    fn eq(&self, other: &Self) -> bool {
-        self.string == other.string
-    }
-}
-impl Eq for ScopedCSharpNativeString {}

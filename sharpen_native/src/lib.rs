@@ -1,19 +1,16 @@
 pub mod assembly;
-pub mod host_instance;
-pub mod message_level;
-pub mod meta_info;
-pub mod string;
-
-mod coral_managed_fns;
+pub mod csharp_type;
 pub mod from_csharp;
+pub mod host_instance;
+pub mod interop_types;
 pub mod managed_object;
-mod managed_type;
-mod sharp_type;
-mod type_cache;
+pub mod managed_type;
+pub mod message_level;
+pub mod type_cache;
 
-pub use sharp_type::TypeFns;
-pub use type_cache::TypeCacheError;
+mod sharpen_managed_fns;
 
+// TODO: FIGURE OUT WHY THIS IS NEEDED OVER REGULAR BOOL
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy)]
 struct Bool32(pub(crate) std::ffi::c_ulong);
@@ -36,3 +33,10 @@ struct InternalCall {
     name: *const netcorehost::pdcstring::PdChar,
     native_function_ptr: *const std::ffi::c_void,
 }
+
+pub type MessageCallbackFn = fn(String, message_level::MessageLevel);
+pub(crate) type MessageCallbackFnInternal =
+    unsafe extern "system" fn(interop_types::NativeString, message_level::MessageLevel);
+pub type ExceptionCallbackFn = fn(String);
+pub(crate) type ExceptionCallbackFnInternal =
+    unsafe extern "system" fn(interop_types::NativeString);

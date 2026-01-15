@@ -1,6 +1,6 @@
 use std::{collections::HashMap, sync::Arc};
 
-use crate::{TypeId, sharp_type::Type};
+use crate::{TypeId, csharp_type::Type};
 
 #[derive(Debug, Clone, Copy)]
 pub enum TypeCacheError {

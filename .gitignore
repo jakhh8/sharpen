@@ -3,5 +3,5 @@
 /.vs
 */bin
 */obj
-/Coral.Managed.Output/*
-!/Coral.Managed.Output/Coral.Managed.runtimeconfig.json
+/Sharpen.Managed.Output/*
+!/Sharpen.Managed.Output/Sharpen.Managed.runtimeconfig.json

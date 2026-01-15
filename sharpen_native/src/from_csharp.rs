@@ -1,4 +1,4 @@
-use crate::{Bool32, string::CSharpNativeString};
+use crate::{Bool32, interop_types::NativeString};
 
 pub trait FromCSharp<T> {
     fn from_csharp(csharp_value: T) -> Self;
@@ -24,13 +24,13 @@ impl Into<Bool32> for bool {
 }
 
 // TODO: Consider cleanup?
-impl FromCSharp<CSharpNativeString> for String {
-    fn from_csharp(csharp_value: CSharpNativeString) -> Self {
+impl FromCSharp<NativeString> for String {
+    fn from_csharp(csharp_value: NativeString) -> Self {
         csharp_value.to_string()
     }
 }
 
-impl Into<String> for CSharpNativeString {
+impl Into<String> for NativeString {
     fn into(self) -> String {
         self.to_string()
     }
