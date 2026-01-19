@@ -10,11 +10,19 @@ pub mod type_cache;
 
 mod sharpen_managed_fns;
 
-// TODO: FIGURE OUT WHY THIS IS NEEDED OVER REGULAR BOOL
+// TODO: Move this to interop_types
+/// # Why is this necessary?
+/// This is a replacment of `bool` as C# considers `bool` to be non-blittable because it can be interpreted differently
+/// in different languages.
+///
+/// # Interpretation
+/// `TRUE = Bool32 > 0`
 #[repr(transparent)]
 #[derive(Debug, Clone, Copy)]
 struct Bool32(pub(crate) std::ffi::c_ulong);
+
 type TypeId = std::ffi::c_long;
+
 type ManagedHandle = std::ffi::c_long;
 
 #[repr(C)]

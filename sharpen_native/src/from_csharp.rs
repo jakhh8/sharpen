@@ -6,7 +6,6 @@ pub trait FromCSharp<T> {
 
 impl FromCSharp<Bool32> for bool {
     fn from_csharp(csharp_value: Bool32) -> Self {
-        // TODO: Figure out the specifics of Bool32 (is true just Bool32 > 0)
         csharp_value.0 > 0
     }
 }
@@ -36,9 +35,22 @@ impl Into<String> for NativeString {
     }
 }
 
-// TODO: This will implement FromCSharp<String> for String which is unwanted(?)
-impl<T> FromCSharp<T> for T {
-    fn from_csharp(csharp_value: T) -> Self {
-        csharp_value
-    }
+// This makes a 'passthrough' implementation of FromCSharp for types which do not need translation
+macro_rules! impl_from_csharp {
+    ($type:ty) => {
+        impl FromCSharp<$type> for $type {
+            fn from_csharp(csharp_value: $type) -> Self {
+                csharp_value
+            }
+        }
+    };
 }
+
+impl_from_csharp!(i8);
+impl_from_csharp!(i16);
+impl_from_csharp!(i32);
+impl_from_csharp!(i64);
+impl_from_csharp!(u8);
+impl_from_csharp!(u16);
+impl_from_csharp!(u32);
+impl_from_csharp!(u64);

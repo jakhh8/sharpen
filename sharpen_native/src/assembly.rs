@@ -1,7 +1,6 @@
 use std::sync::{Arc, Mutex};
 
 use crate::{
-    TypeId,
     csharp_type::Type,
     interop_types::NativeString,
     sharpen_managed_fns::SharpenManagedFunctions,
@@ -20,6 +19,7 @@ pub enum AssemblyLoadStatus {
 }
 
 // TODO: Consider if ManagedAssembly needs to be storing this much info, and if it even really needs to exist?
+// 		 I'm not sure we really need to be exposing assemblies to the end user at all, except for loading in the dlls
 pub struct ManagedAssembly {
     assembly_id: i32,
     context_id: i32,
@@ -33,7 +33,7 @@ pub struct ManagedAssembly {
 }
 
 impl ManagedAssembly {
-    pub fn new(
+    fn new(
         context_id: i32,
         assembly_id: i32,
         load_status: AssemblyLoadStatus,
@@ -67,7 +67,7 @@ pub enum AssemblyLoadError {
 
 pub struct AssemblyLoadContext {
     context_id: i32,
-    // TODO: Make sure this is fine compared to StableVec + C++-style referencess
+    // TODO: Consider a better approach to this (Coral uses a StableVec)
     loaded_assemblies: Vec<Arc<ManagedAssembly>>,
 
     managed_funcs: Arc<SharpenManagedFunctions>,
@@ -96,61 +96,14 @@ impl AssemblyLoadContext {
 
         let assembly_id = (self.managed_funcs.load_assembly)(self.context_id, path_cs_str.clone());
         let load_status = (self.managed_funcs.get_last_load_status)();
-        let mut name = String::new();
-        let mut types = Vec::new();
 
-        // TODO: Just return Err if != Success
-        if load_status == AssemblyLoadStatus::Success {
-            let mut assembly_name =
-                (self.managed_funcs.get_assembly_name)(self.context_id, assembly_id);
-            name = assembly_name.to_string();
-            NativeString::free(&mut assembly_name);
-
-            let mut type_count = -1;
-            (self.managed_funcs.get_assembly_types)(
-                self.context_id,
-                assembly_id,
-                std::ptr::null_mut(),
-                &mut type_count,
-            );
-
-            let mut type_ids = Vec::<TypeId>::with_capacity(type_count as usize);
-            (self.managed_funcs.get_assembly_types)(
-                self.context_id,
-                assembly_id,
-                type_ids.as_mut_ptr(),
-                &mut type_count,
-            );
-            unsafe {
-                type_ids.set_len(type_count as usize);
-            }
-
-            let mut type_cache = self.type_cache.lock().unwrap();
-            for type_id in type_ids {
-                let arc_type = Arc::new(Type::from_id(
-                    type_id,
-                    self.managed_funcs.clone(),
-                    self.type_cache.clone(),
-                ));
-                types.push(arc_type.clone());
-                type_cache.cache_type(arc_type);
-            }
+        if load_status != AssemblyLoadStatus::Success {
+            return Err(AssemblyLoadError::FileNotFound);
         }
 
         NativeString::free(&mut path_cs_str);
 
-        let assembly = Arc::new(ManagedAssembly::new(
-            self.context_id,
-            assembly_id,
-            load_status,
-            name,
-            types,
-            self.managed_funcs.clone(),
-            self.type_cache.clone(),
-        ));
-        self.loaded_assemblies.push(assembly.clone());
-
-        Ok(assembly)
+        self.load_assembly_impl(assembly_id, load_status)
     }
 
     pub fn load_assembly_from_memory(
@@ -163,44 +116,53 @@ impl AssemblyLoadContext {
             bytes.len() as i64,
         );
         let load_status = (self.managed_funcs.get_last_load_status)();
-        let mut name = String::new();
-        let mut types = Vec::new();
 
-        if load_status == AssemblyLoadStatus::Success {
-            let mut assembly_name =
-                (self.managed_funcs.get_assembly_name)(self.context_id, assembly_id);
-            name = assembly_name.to_string();
-            NativeString::free(&mut assembly_name);
+        if load_status != AssemblyLoadStatus::Success {
+            // TODO: Better errors
+            return Err(AssemblyLoadError::FileNotFound);
+        }
 
-            let mut type_count = -1;
-            (self.managed_funcs.get_assembly_types)(
-                self.context_id,
-                assembly_id,
-                std::ptr::null_mut(),
-                &mut type_count,
-            );
+        self.load_assembly_impl(assembly_id, load_status)
+    }
 
-            let mut type_ids = Vec::<TypeId>::with_capacity(type_count as usize);
-            (self.managed_funcs.get_assembly_types)(
-                self.context_id,
-                assembly_id,
-                type_ids.as_mut_ptr(),
-                &mut type_count,
-            );
-            unsafe {
-                type_ids.set_len(type_count as usize);
-            }
+    fn load_assembly_impl(
+        &mut self,
+        assembly_id: i32,
+        load_status: AssemblyLoadStatus,
+    ) -> Result<Arc<ManagedAssembly>, AssemblyLoadError> {
+        let mut assembly_name =
+            (self.managed_funcs.get_assembly_name)(self.context_id, assembly_id);
+        let name = assembly_name.to_string();
+        NativeString::free(&mut assembly_name);
 
-            let mut type_cache = self.type_cache.lock().unwrap();
-            for type_id in type_ids {
-                let arc_type = Arc::new(Type::from_id(
-                    type_id,
-                    self.managed_funcs.clone(),
-                    self.type_cache.clone(),
-                ));
-                types.push(arc_type.clone());
-                type_cache.cache_type(arc_type);
-            }
+        let mut type_count = -1;
+        (self.managed_funcs.get_assembly_types)(
+            self.context_id,
+            assembly_id,
+            std::ptr::null_mut(),
+            &mut type_count,
+        );
+
+        let mut type_ids = Box::new_uninit_slice(type_count as usize);
+        // TODO(mem): Could this not just overflow if len changes between calls
+        (self.managed_funcs.get_assembly_types)(
+            self.context_id,
+            assembly_id,
+            type_ids.as_mut_ptr() as _,
+            &mut type_count,
+        );
+        let type_ids = unsafe { type_ids.assume_init() };
+
+        let mut types = vec![];
+        let mut type_cache = self.type_cache.lock().unwrap();
+        for type_id in type_ids {
+            let arc_type = Arc::new(Type::from_id(
+                type_id,
+                self.managed_funcs.clone(),
+                self.type_cache.clone(),
+            ));
+            types.push(arc_type.clone());
+            type_cache.cache_type(arc_type);
         }
 
         let assembly = Arc::new(ManagedAssembly::new(

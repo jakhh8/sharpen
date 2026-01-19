@@ -7,6 +7,7 @@ use crate::{
 
 pub struct ManagedObject {
     pub(crate) handle: *mut std::ffi::c_void,
+    // TODO: Does this need to know its own type at all
     pub(crate) r#type: Option<Arc<Type>>,
 
     managed_funcs: Arc<SharpenManagedFunctions>,

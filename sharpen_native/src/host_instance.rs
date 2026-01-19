@@ -137,7 +137,6 @@ impl HostInstance {
     }
 }
 
-// TODO: Fix this bull probably with OnceLock
 static MESSAGE_CALLBACK: OnceLock<MessageCallbackFn> = OnceLock::new();
 static MESSAGE_FILTER: OnceLock<MessageLevel> = OnceLock::new();
 static EXCEPTION_CALLBACK: OnceLock<ExceptionCallbackFn> = OnceLock::new();

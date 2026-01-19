@@ -4,4 +4,4 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-netcorehost = "0.18.0"
+netcorehost = "0.20.0"

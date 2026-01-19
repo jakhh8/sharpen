@@ -2,6 +2,7 @@ use netcorehost::pdcstring::{self, PdChar, windows::widestring};
 
 use crate::Bool32;
 
+// TODO: Write some safety documentation
 #[repr(C)]
 #[derive(Clone)]
 pub struct NativeString {
